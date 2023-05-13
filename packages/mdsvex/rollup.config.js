@@ -13,12 +13,13 @@ export default [
 	{
 		plugins: [
 			resolve({ preferBuiltins: true }),
-			commonjs({ namedExports: { 'svelte/compiler': ['parse'] } }),
+			commonjs({ namedExports: { 'svelte/compiler': ['parse'],
+										'typescript': ['transpileModule', 'ModuleKind', 'ScriptTarget', 'NewLineKind'] } }),
 			json(),
 			sucrase({ transforms: ['typescript'] }),
 		],
 		input: 'src/main.ts',
-		external: ['svelte/compiler'],
+		external: ['svelte/compiler', 'typescript'],
 		output: [
 			{ file: pkg.module, format: 'es', sourcemap: false },
 			{ file: pkg.main, format: 'cjs', sourcemap: false },
@@ -41,13 +42,15 @@ export default [
 				delimiters: ['', ''],
 			}),
 			resolve({ browser: true }),
-			commonjs({ namedExports: { 'svelte/compiler': ['parse'] } }),
+			commonjs({ namedExports: { 'svelte/compiler': ['parse'],
+										'typescript': ['transpileModule', 'ModuleKind', 'ScriptTarget', 'NewLineKind'] } }),
 			json(),
 			sucrase({ transforms: ['typescript'] }),
 			globals(),
 			builtins(),
 		],
 		input: 'src/main.ts',
+		external: ['typescript'],
 		output: [
 			{
 				file: 'dist/browser-umd.js',
@@ -65,13 +68,15 @@ export default [
 				delimiters: ['', ''],
 			}),
 			resolve({ browser: true }),
-			commonjs({ namedExports: { 'svelte/compiler': ['parse'] } }),
+			commonjs({ namedExports: { 'svelte/compiler': ['parse'],
+										'typescript': ['transpileModule', 'ModuleKind', 'ScriptTarget', 'NewLineKind'] } }),
 			json(),
 			sucrase({ transforms: ['typescript'] }),
 			globals(),
 			builtins(),
 		],
 		input: 'src/main.ts',
+		external: ['typescript'],
 		output: [
 			{
 				file: 'dist/browser-es.js',

@@ -12,6 +12,7 @@ import visit from 'unist-util-visit';
 import yaml from 'js-yaml';
 import { parse } from 'svelte/compiler';
 import escape from 'escape-html';
+import ts from 'typescript';
 
 import * as path from 'path';
 
@@ -105,6 +106,7 @@ export function smartypants_transformer(options = {}): Transformer {
 
 const attrs = `(?:\\s{0,1}[a-zA-z]+=(?:"){0,1}[a-zA-Z0-9]+(?:"){0,1})*`;
 const context = `(?:\\s{0,1}context)=(?:"){0,1}module(?:"){0,1}`;
+const typelang = `(?:\\s{0,1}lang)=(?:"){0,1}ts(?:"){0,1}`;
 
 const RE_BLANK = /^\n+$|^\s+$/;
 
@@ -112,6 +114,9 @@ const RE_SCRIPT = new RegExp(`^(<script` + attrs + `>)`);
 
 const RE_MODULE_SCRIPT = new RegExp(
 	`^(<script` + attrs + context + attrs + `>)`
+);
+const RE_TYPESCRIPT = new RegExp(
+	`^(<script` + attrs + typelang + attrs + `>)`
 );
 
 function extract_parts(nodes: Array<Element | Text>): Parts {
@@ -162,8 +167,21 @@ function extract_parts(nodes: Array<Element | Text>): Parts {
 			module?: any;
 		};
 		try {
+			if(RE_TYPESCRIPT.exec(nodes[i].value as string))
+            {
+				let nval = (nodes[i].value as string).slice();
+                let opening_index = nval.indexOf('>');
+                let opening_tag = nval.substring(0, opening_index + 1);
+                let closing_index = nval.lastIndexOf('<');
+                let cleaned_str = nval.substring(opening_index + 1, closing_index);
+                let compiler_output = ts.transpileModule(cleaned_str,{ compilerOptions: {  module: ts.ModuleKind.ES2015, target: ts.ScriptTarget.ES2015, strict: false, allowSyntheticDefaultImports: true, allowArbitraryExtensions: true, allowUnusedLabels: true, esModuleInterop: false, noImplicitUseStrict: true, preserveValueImports: true, verbatimModuleSyntax: true, newLine: ts.NewLineKind.LineFeed }});
+                // let compiler_output = preprocess.typescript({ content: nval, attributes: { "language": "ts" }, markup: nval, filename: " " });
+                nodes[i].value = opening_tag + compiler_output.outputText.trim() + "</script>";
+                // console.log("post typescript compile: ", nval);
+            }
 			result = parse(nodes[i].value as string);
 		} catch (e) {
+			// console.log(e);
 			parts.html.push(nodes[i]);
 			continue children;
 		}
